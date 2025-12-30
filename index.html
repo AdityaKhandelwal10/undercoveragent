@@ -374,7 +374,7 @@
 
         .theme-toggle {
             position: fixed;
-            top: 1rem;
+            bottom: 1rem;
             right: 1rem;
             background: var(--card-bg);
             border: 2px solid var(--card-border);
@@ -384,6 +384,36 @@
             font-size: 1.2rem;
             transition: all 0.3s;
             z-index: 1000;
+        }
+
+        .reread-word-btn {
+            margin-top: 1rem;
+        }
+
+        .rating-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .rating-btn {
+            font-size: 2rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+            border-radius: 0.5rem;
+        }
+
+        .rating-btn:hover {
+            transform: scale(1.2);
+            background: rgba(188, 133, 83, 0.1);
+        }
+
+        .rating-btn.rated {
+            opacity: 0.5;
         }
 
         .theme-toggle:hover {
@@ -477,6 +507,32 @@
             </div>
         </div>
 
+        <!-- Re-read Word Screen -->
+        <div id="reread-screen" class="screen">
+            <h1>Re-read Word</h1>
+
+            <div class="card">
+                <div class="alert alert-info">
+                    Select which player you are to see your word again.
+                </div>
+
+                <div class="vote-buttons" id="reread-player-buttons">
+                    <!-- Player buttons will appear here -->
+                </div>
+
+                <div id="reread-word-container" style="display: none;">
+                    <h2 id="reread-player-name">Player's Word</h2>
+                    <div class="word-display" id="reread-word-display">
+                        <!-- Word will appear here -->
+                    </div>
+                    <button class="secondary" onclick="hideRereadWord()">Hide Word</button>
+                </div>
+
+                <button class="secondary reread-word-btn" onclick="goBackFromReread()">Back to Game</button>
+            </div>
+        </div>
+        </div>
+
         <!-- Description Phase Screen -->
         <div id="description-screen" class="screen">
             <h1>Description Phase</h1>
@@ -492,6 +548,7 @@
 
                 <button class="primary" onclick="nextDescriber()">Next Speaker</button>
                 <button class="secondary" onclick="proceedToDiscussion()">Proceed to Discussion</button>
+                <button class="secondary" onclick="showRereadScreen()">Re-read My Word</button>
             </div>
         </div>
 
@@ -509,6 +566,7 @@
                 </div>
 
                 <button class="primary" onclick="proceedToVoting()">Proceed to Voting</button>
+                <button class="secondary" onclick="showRereadScreen()">Re-read My Word</button>
             </div>
         </div>
 
@@ -595,6 +653,14 @@
                     Undercover: <span id="final-undercover-word" style="color: #fdba74;"></span>
                 </div>
 
+                <div class="rating-container">
+                    <div class="alert alert-info" style="margin-bottom: 1rem;">
+                        Rate this word combination:
+                    </div>
+                    <button class="rating-btn" id="thumbs-up-btn" onclick="rateWords('up')" title="Thumbs Up">👍</button>
+                    <button class="rating-btn" id="thumbs-down-btn" onclick="rateWords('down')" title="Thumbs Down">👎</button>
+                </div>
+
                 <button class="primary" onclick="startNewRound()">New Round (Same Players)</button>
                 <button class="secondary" onclick="resetGame()">New Game (Change Players)</button>
             </div>
@@ -614,7 +680,8 @@
             votingMode: 'open'
         };
 
-        let wordPairs = [];
+        let wordDictionary = {};
+        let wordRatings = {}; // Store ratings for word combinations
 
         // LocalStorage Functions
         function savePlayersToStorage() {
@@ -687,12 +754,18 @@
             }
         }
 
-        // Load word pairs from JSON
+        // Load words from JSON
         async function loadWords() {
             try {
                 const response = await fetch('words.json');
                 const data = await response.json();
-                wordPairs = data.pairs;
+                // Expect structure: { "data": { "word1": [ "word2", "word3" ], ... } }
+                wordDictionary = data.data || {};
+                // Load word ratings from localStorage
+                const savedRatings = localStorage.getItem('wordRatings');
+                if (savedRatings) {
+                    wordRatings = JSON.parse(savedRatings);
+                }
             } catch (error) {
                 console.error('Error loading words:', error);
                 alert('Error loading word list. Make sure words.json exists!');
@@ -785,15 +858,36 @@
             // Assign roles
             assignRoles(undercoverCount, mrwhiteCount);
 
-            // Select random word pair
-            gameState.wordPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+            // Select random words from dictionary:
+            // - Pick a random combination (key + values)
+            // - Randomly assign which word goes to civilians vs undercovers
+            const baseWords = Object.keys(wordDictionary);
+            if (baseWords.length === 0) {
+                alert('Word list is empty. Please add entries to words.json');
+                return;
+            }
+            const randomBase = baseWords[Math.floor(Math.random() * baseWords.length)];
+            const relatedWords = wordDictionary[randomBase];
+            if (!Array.isArray(relatedWords) || relatedWords.length === 0) {
+                alert('Invalid word configuration in words.json');
+                return;
+            }
+
+            // Combine key word with all related words and shuffle
+            const allWords = [randomBase, ...relatedWords];
+            shuffleArray(allWords);
+            
+            // Randomly assign: first word to civilians, second to undercovers
+            const civilianWord = allWords[0];
+            const undercoverWord = allWords[1];
+            gameState.wordPair = { civilian: civilianWord, undercover: undercoverWord };
 
             // Assign words based on roles
             gameState.players.forEach(player => {
                 if (player.role === 'civilian') {
-                    player.word = gameState.wordPair.civilian;
+                    player.word = civilianWord;
                 } else if (player.role === 'undercover') {
-                    player.word = gameState.wordPair.undercover;
+                    player.word = undercoverWord;
                 } else {
                     player.word = null; // Mr. White has no word
                 }
@@ -1094,6 +1188,104 @@
             prepareDescriptionPhase();
         }
 
+        // Re-read Word Functions
+        function showRereadScreen() {
+            const activePlayers = gameState.players.filter(p => !p.isEliminated);
+            if (activePlayers.length === 0) {
+                alert('No active players');
+                return;
+            }
+            
+            // Store which screen we came from
+            const currentScreen = document.querySelector('.screen.active').id;
+            gameState.previousScreen = currentScreen;
+            
+            // Show player selection buttons
+            const playerButtons = document.getElementById('reread-player-buttons');
+            playerButtons.innerHTML = activePlayers.map(player => `
+                <button class="vote-btn" onclick="selectRereadPlayer('${player.name}')">${player.name}</button>
+            `).join('');
+            
+            document.getElementById('reread-word-container').style.display = 'none';
+            
+            showScreen('reread-screen');
+        }
+
+        function selectRereadPlayer(playerName) {
+            const player = gameState.players.find(p => p.name === playerName);
+            if (!player) return;
+            
+            gameState.rereadPlayerIndex = gameState.players.indexOf(player);
+            showRereadWord();
+        }
+
+        function showRereadWord() {
+            const player = gameState.players[gameState.rereadPlayerIndex];
+            const wordDisplay = document.getElementById('reread-word-display');
+
+            document.getElementById('reread-player-name').textContent = `${player.name}'s Word`;
+
+            if (player.role === 'mrwhite') {
+                wordDisplay.textContent = 'You have no word!';
+                wordDisplay.style.fontSize = '1.8rem';
+            } else {
+                wordDisplay.textContent = player.word;
+                wordDisplay.style.fontSize = '2.5rem';
+            }
+
+            document.getElementById('reread-word-container').style.display = 'block';
+        }
+
+        function hideRereadWord() {
+            document.getElementById('reread-word-container').style.display = 'none';
+        }
+
+        function goBackFromReread() {
+            if (gameState.previousScreen) {
+                showScreen(gameState.previousScreen);
+            } else {
+                showScreen('description-screen');
+            }
+        }
+
+        // Rating Functions
+        function rateWords(rating) {
+            const wordKey = `${gameState.wordPair.civilian}|${gameState.wordPair.undercover}`;
+            
+            if (!wordRatings[wordKey]) {
+                wordRatings[wordKey] = { up: 0, down: 0 };
+            }
+            
+            wordRatings[wordKey][rating]++;
+            
+            // Save to localStorage
+            localStorage.setItem('wordRatings', JSON.stringify(wordRatings));
+            
+            // Update UI
+            const thumbsUpBtn = document.getElementById('thumbs-up-btn');
+            const thumbsDownBtn = document.getElementById('thumbs-down-btn');
+            
+            if (rating === 'up') {
+                thumbsUpBtn.classList.add('rated');
+                thumbsDownBtn.disabled = true;
+            } else {
+                thumbsDownBtn.classList.add('rated');
+                thumbsUpBtn.disabled = true;
+            }
+            
+            // Show feedback
+            const ratingContainer = document.querySelector('.rating-container');
+            const feedback = document.createElement('div');
+            feedback.className = 'alert alert-success';
+            feedback.textContent = 'Thank you for your feedback!';
+            feedback.style.marginTop = '1rem';
+            ratingContainer.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+
         // Game Over Functions
         function endGame(winner) {
             const announcement = document.getElementById('winner-announcement');
@@ -1124,6 +1316,21 @@
             document.getElementById('final-civilian-word').textContent = gameState.wordPair.civilian;
             document.getElementById('final-undercover-word').textContent = gameState.wordPair.undercover;
 
+            // Reset rating buttons
+            const thumbsUpBtn = document.getElementById('thumbs-up-btn');
+            const thumbsDownBtn = document.getElementById('thumbs-down-btn');
+            thumbsUpBtn.classList.remove('rated');
+            thumbsDownBtn.classList.remove('rated');
+            thumbsUpBtn.disabled = false;
+            thumbsDownBtn.disabled = false;
+            
+            // Remove any existing feedback messages
+            const ratingContainer = document.querySelector('.rating-container');
+            const existingFeedback = ratingContainer.querySelector('.alert-success');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+
             showScreen('gameover-screen');
         }
 
@@ -1150,15 +1357,36 @@
             // Assign roles for new round
             assignRoles(undercoverCount, mrwhiteCount);
 
-            // Select random word pair
-            gameState.wordPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+            // Select random words from dictionary:
+            // - Pick a random combination (key + values)
+            // - Randomly assign which word goes to civilians vs undercovers
+            const baseWords = Object.keys(wordDictionary);
+            if (baseWords.length === 0) {
+                alert('Word list is empty. Please add entries to words.json');
+                return;
+            }
+            const randomBase = baseWords[Math.floor(Math.random() * baseWords.length)];
+            const relatedWords = wordDictionary[randomBase];
+            if (!Array.isArray(relatedWords) || relatedWords.length === 0) {
+                alert('Invalid word configuration in words.json');
+                return;
+            }
+
+            // Combine key word with all related words and shuffle
+            const allWords = [randomBase, ...relatedWords];
+            shuffleArray(allWords);
+            
+            // Randomly assign: first word to civilians, second to undercovers
+            const civilianWord = allWords[0];
+            const undercoverWord = allWords[1];
+            gameState.wordPair = { civilian: civilianWord, undercover: undercoverWord };
 
             // Assign words based on roles
             gameState.players.forEach(player => {
                 if (player.role === 'civilian') {
-                    player.word = gameState.wordPair.civilian;
+                    player.word = civilianWord;
                 } else if (player.role === 'undercover') {
-                    player.word = gameState.wordPair.undercover;
+                    player.word = undercoverWord;
                 } else {
                     player.word = null;
                 }
