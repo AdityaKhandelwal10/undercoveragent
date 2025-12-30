@@ -492,6 +492,7 @@
 
                 <button class="primary" onclick="nextDescriber()">Next Speaker</button>
                 <button class="secondary" onclick="proceedToDiscussion()">Proceed to Discussion</button>
+                <button class="secondary" onclick="startReviewWord()">Forgot Your Word?</button>
             </div>
         </div>
 
@@ -509,6 +510,7 @@
                 </div>
 
                 <button class="primary" onclick="proceedToVoting()">Proceed to Voting</button>
+                <button class="secondary" onclick="startReviewWord()">Forgot Your Word?</button>
             </div>
         </div>
 
@@ -570,6 +572,56 @@
                 </div>
 
                 <button id="continue-btn" class="primary" onclick="continueGame()" style="display: none;">Continue</button>
+            </div>
+        </div>
+
+        <!-- Review Word Screen -->
+        <div id="review-word-screen" class="screen">
+            <h1>Review Your Word</h1>
+
+            <div class="card">
+                <div class="alert alert-info">
+                    Select your name to review your word
+                </div>
+
+                <div class="input-group">
+                    <label>Select Your Name:</label>
+                    <select id="review-player-select" class="input">
+                        <!-- Players will be populated here -->
+                    </select>
+                </div>
+
+                <button class="primary" onclick="showReviewPrivacy()">Continue</button>
+                <button class="secondary" onclick="returnFromReview()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Review Word Privacy Screen -->
+        <div id="review-privacy-screen" class="screen">
+            <h1>Ready to See Your Word?</h1>
+
+            <div class="card">
+                <div class="alert alert-warning">
+                    Make sure no one else is looking at the screen!
+                </div>
+
+                <button class="primary large" onclick="showReviewWord()">Tap When Ready</button>
+                <button class="secondary" onclick="showScreen('review-word-screen')">Back</button>
+            </div>
+        </div>
+
+        <!-- Review Word Display Screen -->
+        <div id="review-display-screen" class="screen">
+            <h1 id="review-player-name">Player Name</h1>
+
+            <div class="card">
+                <div id="review-word-container" style="text-align: center; margin: 2rem 0;">
+                    <div id="review-word-display" style="font-size: 2.5rem; font-weight: bold; color: var(--accent-primary); margin: 2rem 0;">
+                        <!-- Word will appear here -->
+                    </div>
+                </div>
+
+                <button class="primary" onclick="returnFromReview()">Hide Word & Return</button>
             </div>
         </div>
 
@@ -1092,6 +1144,68 @@
             // Game continues - back to description phase
             showScreen('description-screen');
             prepareDescriptionPhase();
+        }
+
+        // Review Word Functions
+        let reviewReturnScreen = null;
+
+        function startReviewWord() {
+            // Store current screen to return to later
+            const screens = ['description-screen', 'discussion-screen'];
+            for (const screenId of screens) {
+                const screen = document.getElementById(screenId);
+                if (screen && screen.classList.contains('active')) {
+                    reviewReturnScreen = screenId;
+                    break;
+                }
+            }
+
+            // Populate player dropdown
+            const select = document.getElementById('review-player-select');
+            const activePlayers = gameState.players.filter(p => !p.isEliminated);
+            select.innerHTML = activePlayers.map(player =>
+                `<option value="${player.name}">${player.name}</option>`
+            ).join('');
+
+            showScreen('review-word-screen');
+        }
+
+        function showReviewPrivacy() {
+            showScreen('review-privacy-screen');
+        }
+
+        function showReviewWord() {
+            const selectedName = document.getElementById('review-player-select').value;
+            const player = gameState.players.find(p => p.name === selectedName);
+
+            if (!player) {
+                alert('Player not found!');
+                return;
+            }
+
+            // Display player name
+            document.getElementById('review-player-name').textContent = selectedName;
+
+            // Display word
+            const wordDisplay = document.getElementById('review-word-display');
+            if (player.role === 'mrwhite') {
+                wordDisplay.textContent = 'You have no word!';
+                wordDisplay.style.fontSize = '1.8rem';
+            } else {
+                wordDisplay.textContent = player.word;
+                wordDisplay.style.fontSize = '2.5rem';
+            }
+
+            showScreen('review-display-screen');
+        }
+
+        function returnFromReview() {
+            if (reviewReturnScreen) {
+                showScreen(reviewReturnScreen);
+                reviewReturnScreen = null;
+            } else {
+                showScreen('description-screen');
+            }
         }
 
         // Game Over Functions
