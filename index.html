@@ -5,44 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Undercover / Mr. White</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap');
+
         :root {
-            /* Dark mode colors (default) */
-            --bg-gradient-start: #262626;
-            --bg-gradient-end: #0a0a0a;
-            --text-primary: #f5f5f5;
-            --text-secondary: #c89d6f;
-            --accent-primary: #bc8553;
-            --accent-primary-light: #c89d6f;
-            --accent-primary-dark: #ae7248;
-            --card-bg: rgba(188, 133, 83, 0.08);
-            --card-border: rgba(188, 133, 83, 0.2);
-            --input-bg: rgba(38, 38, 38, 0.6);
-            --input-border: rgba(188, 133, 83, 0.3);
-            --player-item-bg: rgba(38, 38, 38, 0.6);
-            --word-display-bg: rgba(38, 38, 38, 0.6);
-            --description-item-bg: rgba(38, 38, 38, 0.6);
-            --alert-info-bg: rgba(188, 133, 83, 0.2);
-            --alert-info-border: rgba(188, 133, 83, 0.3);
+            /* Y2K Techno-Surveillance Colors */
+            --bg-base: #0A0D14;
+            --accent-primary: #7A8CFF;
+            --accent-secondary: #4ED6FF;
+            --accent-alert: #B48CFF;
+            --text-primary: #D8DCFF;
+            --text-dim: #8892B8;
+            --card-bg: rgba(122, 140, 255, 0.03);
+            --card-border: rgba(122, 140, 255, 0.3);
+            --input-bg: rgba(10, 13, 20, 0.8);
+            --input-border: rgba(122, 140, 255, 0.4);
+            --panel-divider: rgba(122, 140, 255, 0.2);
         }
 
         [data-theme="light"] {
-            /* Light mode colors */
-            --bg-gradient-start: #fafafa;
-            --bg-gradient-end: #f5f5f5;
-            --text-primary: #1a1a1a;
-            --text-secondary: #8b5e34;
-            --accent-primary: #bc8553;
-            --accent-primary-light: #a67447;
-            --accent-primary-dark: #8b5e34;
-            --card-bg: rgba(188, 133, 83, 0.05);
-            --card-border: rgba(188, 133, 83, 0.15);
-            --input-bg: rgba(255, 255, 255, 0.8);
-            --input-border: rgba(188, 133, 83, 0.3);
-            --player-item-bg: rgba(255, 255, 255, 0.6);
-            --word-display-bg: rgba(255, 255, 255, 0.8);
-            --description-item-bg: rgba(255, 255, 255, 0.6);
-            --alert-info-bg: rgba(188, 133, 83, 0.1);
-            --alert-info-border: rgba(188, 133, 83, 0.3);
+            /* Y2K style doesn't have light mode - keep same */
+            --bg-base: #0A0D14;
+            --accent-primary: #7A8CFF;
+            --accent-secondary: #4ED6FF;
+            --accent-alert: #B48CFF;
+            --text-primary: #D8DCFF;
+            --text-dim: #8892B8;
+            --card-bg: rgba(122, 140, 255, 0.03);
+            --card-border: rgba(122, 140, 255, 0.3);
+            --input-bg: rgba(10, 13, 20, 0.8);
+            --input-border: rgba(122, 140, 255, 0.4);
+            --panel-divider: rgba(122, 140, 255, 0.2);
         }
 
         * {
@@ -52,56 +44,101 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-base);
             color: var(--text-primary);
             min-height: 100vh;
             padding: 1rem;
-            line-height: 1.6;
-            transition: background 0.3s ease, color 0.3s ease;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(122, 140, 255, 0.03) 0px,
+                    transparent 1px,
+                    transparent 2px,
+                    rgba(122, 140, 255, 0.03) 3px
+                );
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.5;
         }
 
         .container {
             max-width: 600px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .screen {
             display: none;
-            animation: fadeIn 0.3s ease-in;
+            animation: screenLoad 0.15s linear;
         }
 
         .screen.active {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes screenLoad {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         h1 {
+            font-family: 'Share Tech Mono', monospace;
             text-align: center;
             margin-bottom: 2rem;
-            font-size: 2rem;
-            color: var(--text-secondary);
-            text-shadow: 0 0 20px rgba(188, 133, 83, 0.3);
+            font-size: 1.75rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 10px rgba(122, 140, 255, 0.6);
         }
 
         h2 {
+            font-family: 'Share Tech Mono', monospace;
             text-align: center;
             margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-            color: var(--text-secondary);
+            font-size: 1.25rem;
+            color: var(--accent-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .card {
             background: var(--card-bg);
-            border-radius: 1rem;
+            border-radius: 4px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
+            box-shadow:
+                0 0 20px rgba(122, 140, 255, 0.1),
+                inset 0 1px 0 rgba(122, 140, 255, 0.1);
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--accent-primary) 50%,
+                transparent 100%);
+            opacity: 0.3;
         }
 
         .input-group {
@@ -111,8 +148,11 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-            font-weight: 500;
+            color: var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         input[type="text"],
@@ -120,12 +160,14 @@
         select {
             width: 100%;
             padding: 0.75rem;
+            font-family: 'Inter', sans-serif;
             font-size: 1rem;
-            border: 2px solid var(--input-border);
-            border-radius: 0.5rem;
+            border: 1px solid var(--input-border);
+            border-radius: 2px;
             background: var(--input-bg);
             color: var(--text-primary);
-            transition: all 0.3s;
+            transition: all 0.1s linear;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         input[type="text"]:focus,
@@ -133,50 +175,76 @@
         select:focus {
             outline: none;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(188, 133, 83, 0.2);
+            box-shadow:
+                inset 0 1px 3px rgba(0, 0, 0, 0.3),
+                0 0 8px rgba(122, 140, 255, 0.4);
         }
 
         button {
             width: 100%;
             padding: 1rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 0.75rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.1s linear;
             margin-bottom: 0.75rem;
+            position: relative;
         }
 
         button.primary {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(188, 133, 83, 0.4);
+            background: rgba(10, 13, 20, 0.8);
+            color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(122, 140, 255, 0.3);
         }
 
         button.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(188, 133, 83, 0.5);
+            box-shadow: 0 0 15px rgba(122, 140, 255, 0.6);
+            color: var(--text-primary);
+            border-color: var(--text-primary);
         }
 
         button.primary:active {
-            transform: translateY(0);
+            transform: translateY(1px);
+            background: rgba(122, 140, 255, 0.2);
+            box-shadow: 0 0 8px rgba(122, 140, 255, 0.4);
         }
 
         button.secondary {
-            background: rgba(188, 133, 83, 0.15);
-            color: var(--text-secondary);
-            border: 2px solid rgba(188, 133, 83, 0.3);
+            background: rgba(10, 13, 20, 0.5);
+            color: var(--accent-secondary);
+            border: 1px solid var(--accent-secondary);
+            box-shadow: 0 0 8px rgba(78, 214, 255, 0.2);
         }
 
         button.secondary:hover {
-            background: rgba(188, 133, 83, 0.25);
+            box-shadow: 0 0 12px rgba(78, 214, 255, 0.5);
+            color: var(--text-primary);
+        }
+
+        button.secondary:active {
+            transform: translateY(1px);
+            background: rgba(78, 214, 255, 0.15);
         }
 
         button.danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border: 2px solid rgba(239, 68, 68, 0.3);
+            background: rgba(10, 13, 20, 0.5);
+            color: var(--accent-alert);
+            border: 1px solid var(--accent-alert);
+            box-shadow: 0 0 8px rgba(180, 140, 255, 0.2);
+        }
+
+        button.danger:hover {
+            box-shadow: 0 0 12px rgba(180, 140, 255, 0.5);
+        }
+
+        button.danger:active {
+            transform: translateY(1px);
+            background: rgba(180, 140, 255, 0.15);
         }
 
         button.small {
@@ -194,43 +262,53 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.75rem;
-            background: var(--player-item-bg);
-            border-radius: 0.5rem;
+            background: rgba(10, 13, 20, 0.5);
+            border: 1px solid var(--panel-divider);
+            border-radius: 2px;
             margin-bottom: 0.5rem;
         }
 
         .player-item.eliminated {
-            opacity: 0.5;
+            opacity: 0.4;
             text-decoration: line-through;
+            color: var(--text-dim);
         }
 
         .player-item.current {
-            background: rgba(188, 133, 83, 0.2);
-            border: 2px solid var(--accent-primary);
+            background: rgba(122, 140, 255, 0.1);
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 0 10px rgba(122, 140, 255, 0.3);
         }
 
         .role-badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            font-weight: 600;
+            border-radius: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-left: 0.5rem;
+            border: 1px solid;
         }
 
         .role-civilian {
-            background: rgba(52, 211, 153, 0.2);
-            color: #6ee7b7;
+            background: rgba(78, 214, 255, 0.1);
+            color: var(--accent-secondary);
+            border-color: var(--accent-secondary);
         }
 
         .role-undercover {
-            background: rgba(251, 146, 60, 0.2);
-            color: #fdba74;
+            background: rgba(180, 140, 255, 0.1);
+            color: var(--accent-alert);
+            border-color: var(--accent-alert);
         }
 
         .role-mrwhite {
-            background: rgba(196, 181, 253, 0.2);
-            color: #c4b5fd;
+            background: rgba(122, 140, 255, 0.1);
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
 
         .word-display {
@@ -239,15 +317,16 @@
             font-weight: bold;
             padding: 2rem;
             margin: 1.5rem 0;
-            background: var(--word-display-bg);
-            border-radius: 1rem;
-            color: var(--text-secondary);
-            text-shadow: 0 0 20px rgba(188, 133, 83, 0.5);
+            background: rgba(10, 13, 20, 0.8);
+            border-radius: 4px;
+            color: var(--accent-primary);
+            text-shadow: 0 0 15px rgba(122, 140, 255, 0.8);
             min-height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid rgba(188, 133, 83, 0.3);
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 0 20px rgba(122, 140, 255, 0.3);
         }
 
         .word-hidden {
@@ -257,10 +336,12 @@
 
         .timer {
             text-align: center;
+            font-family: 'Share Tech Mono', monospace;
             font-size: 3rem;
             font-weight: bold;
-            color: var(--text-secondary);
+            color: var(--accent-primary);
             margin: 2rem 0;
+            text-shadow: 0 0 20px rgba(122, 140, 255, 0.6);
         }
 
         .vote-buttons {
@@ -272,57 +353,68 @@
 
         .vote-btn {
             padding: 1rem;
-            background: rgba(188, 133, 83, 0.1);
-            border: 2px solid rgba(188, 133, 83, 0.3);
-            border-radius: 0.75rem;
-            color: var(--text-primary);
+            background: rgba(10, 13, 20, 0.6);
+            border: 1px solid var(--accent-secondary);
+            border-radius: 4px;
+            color: var(--accent-secondary);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.1s linear;
+            font-family: 'Inter', sans-serif;
             font-size: 1rem;
+            box-shadow: 0 0 8px rgba(78, 214, 255, 0.2);
             font-weight: 600;
         }
 
         .vote-btn:hover {
-            background: rgba(188, 133, 83, 0.2);
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
+            background: rgba(78, 214, 255, 0.15);
+            box-shadow: 0 0 12px rgba(78, 214, 255, 0.4);
+            color: var(--text-primary);
+        }
+
+        .vote-btn:active {
+            transform: translateY(1px);
         }
 
         .vote-btn.selected {
-            background: var(--accent-primary);
-            color: white;
+            background: rgba(78, 214, 255, 0.2);
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 15px rgba(78, 214, 255, 0.5);
         }
 
         .alert {
             padding: 1rem;
-            border-radius: 0.75rem;
+            border-radius: 4px;
             margin-bottom: 1rem;
             text-align: center;
+            border: 1px solid;
         }
 
         .alert-info {
-            background: var(--alert-info-bg);
-            border: 2px solid var(--alert-info-border);
-            color: var(--text-secondary);
+            background: rgba(122, 140, 255, 0.1);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
         }
 
         .alert-warning {
-            background: rgba(251, 146, 60, 0.2);
-            border: 2px solid rgba(251, 146, 60, 0.3);
-            color: #fdba74;
+            background: rgba(180, 140, 255, 0.1);
+            border-color: var(--accent-alert);
+            color: var(--accent-alert);
         }
 
         .alert-success {
-            background: rgba(52, 211, 153, 0.2);
-            border: 2px solid rgba(52, 211, 153, 0.3);
-            color: #6ee7b7;
+            background: rgba(78, 214, 255, 0.1);
+            border-color: var(--accent-secondary);
+            color: var(--accent-secondary);
         }
 
         .error {
-            color: #fca5a5;
-            font-size: 0.9rem;
+            color: var(--accent-alert);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
             margin-top: 0.5rem;
             display: none;
+            text-transform: uppercase;
         }
 
         .error.show {
@@ -335,28 +427,33 @@
 
         .description-order-item {
             padding: 1rem;
-            background: var(--description-item-bg);
-            border-radius: 0.5rem;
+            background: rgba(10, 13, 20, 0.5);
+            border: 1px solid var(--panel-divider);
+            border-radius: 2px;
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
         }
 
         .description-order-item.current {
-            background: rgba(188, 133, 83, 0.2);
-            border: 2px solid var(--accent-primary);
+            background: rgba(122, 140, 255, 0.1);
+            border: 1px solid var(--accent-primary);
+            box-shadow: 0 0 10px rgba(122, 140, 255, 0.3);
         }
 
         .description-order-item .number {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: rgba(188, 133, 83, 0.3);
+            border-radius: 2px;
+            background: rgba(122, 140, 255, 0.2);
+            border: 1px solid var(--accent-primary);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Share Tech Mono', monospace;
             font-weight: bold;
             margin-right: 1rem;
+            color: var(--accent-primary);
         }
 
         .result-display {
@@ -366,24 +463,28 @@
         }
 
         .result-display .player-name {
-            font-size: 2rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.75rem;
             font-weight: bold;
-            color: var(--text-secondary);
+            color: var(--accent-primary);
             margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .theme-toggle {
             position: fixed;
             bottom: 1rem;
             right: 1rem;
-            background: var(--card-bg);
-            border: 2px solid var(--card-border);
-            border-radius: 2rem;
+            background: rgba(10, 13, 20, 0.8);
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
             padding: 0.5rem 1rem;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.3s;
+            transition: all 0.1s linear;
             z-index: 1000;
+            box-shadow: 0 0 10px rgba(122, 140, 255, 0.3);
         }
 
         .reread-word-btn {
@@ -395,21 +496,24 @@
             justify-content: center;
             gap: 1rem;
             margin: 2rem 0;
+            flex-direction: column;
+            align-items: center;
         }
 
         .rating-btn {
             font-size: 2rem;
-            background: transparent;
-            border: none;
+            background: rgba(10, 13, 20, 0.5);
+            border: 1px solid var(--accent-secondary);
             cursor: pointer;
             padding: 0.5rem 1rem;
-            transition: all 0.3s;
-            border-radius: 0.5rem;
+            transition: all 0.1s linear;
+            border-radius: 4px;
         }
 
         .rating-btn:hover {
-            transform: scale(1.2);
-            background: rgba(188, 133, 83, 0.1);
+            transform: scale(1.1);
+            background: rgba(78, 214, 255, 0.1);
+            box-shadow: 0 0 12px rgba(78, 214, 255, 0.4);
         }
 
         .rating-btn.rated {
@@ -417,8 +521,7 @@
         }
 
         .theme-toggle:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(188, 133, 83, 0.3);
+            box-shadow: 0 0 15px rgba(122, 140, 255, 0.6);
         }
 
         @media (max-width: 640px) {
@@ -549,6 +652,7 @@
                 <button class="primary" onclick="nextDescriber()">Next Speaker</button>
                 <button class="secondary" onclick="proceedToDiscussion()">Proceed to Discussion</button>
                 <button class="secondary" onclick="showRereadScreen()">Re-read My Word</button>
+                <button class="danger" onclick="exitGame()">Exit Game</button>
             </div>
         </div>
 
@@ -567,6 +671,7 @@
 
                 <button class="primary" onclick="proceedToVoting()">Proceed to Voting</button>
                 <button class="secondary" onclick="showRereadScreen()">Re-read My Word</button>
+                <button class="danger" onclick="exitGame()">Exit Game</button>
             </div>
         </div>
 
@@ -584,6 +689,8 @@
                 <div class="vote-buttons" id="vote-buttons">
                     <!-- Vote buttons will appear here -->
                 </div>
+
+                <button class="danger" onclick="exitGame()" style="margin-top: 1rem;">Exit Game</button>
             </div>
         </div>
 
@@ -601,6 +708,7 @@
                 </div>
 
                 <button class="primary" onclick="processOpenVoting()">Show Results</button>
+                <button class="danger" onclick="exitGame()">Exit Game</button>
             </div>
         </div>
 
@@ -876,7 +984,7 @@
             // Combine key word with all related words and shuffle
             const allWords = [randomBase, ...relatedWords];
             shuffleArray(allWords);
-            
+
             // Randomly assign: first word to civilians, second to undercovers
             const civilianWord = allWords[0];
             const undercoverWord = allWords[1];
@@ -1248,6 +1356,27 @@
             }
         }
 
+        // Exit Game Function
+        function exitGame() {
+            const confirmed = confirm('Are you sure you want to exit the game? All current game progress will be lost.');
+
+            if (confirmed) {
+                // Reset game state but keep players
+                gameState.players.forEach(player => {
+                    player.role = null;
+                    player.word = null;
+                    player.isEliminated = false;
+                });
+                gameState.currentPlayerIndex = 0;
+                gameState.currentDescriber = 0;
+                gameState.wordPair = null;
+                gameState.votes = [];
+
+                // Return to setup screen
+                showScreen('setup-screen');
+            }
+        }
+
         // Rating Functions
         function rateWords(rating) {
             const wordKey = `${gameState.wordPair.civilian}|${gameState.wordPair.undercover}`;
@@ -1375,7 +1504,7 @@
             // Combine key word with all related words and shuffle
             const allWords = [randomBase, ...relatedWords];
             shuffleArray(allWords);
-            
+
             // Randomly assign: first word to civilians, second to undercovers
             const civilianWord = allWords[0];
             const undercoverWord = allWords[1];
