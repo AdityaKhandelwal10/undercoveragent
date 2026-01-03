@@ -435,6 +435,94 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Instructions Styles */
+        .instructions-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .instructions-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(188, 133, 83, 0.1);
+            border: 1px solid rgba(188, 133, 83, 0.3);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 500;
+            width: auto;
+            margin: 0 auto 1rem;
+        }
+
+        .instructions-toggle:hover {
+            background: rgba(188, 133, 83, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .instructions-toggle-icon {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .instructions-toggle.active .instructions-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .instructions-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+
+        .instructions-content.active {
+            max-height: 800px;
+        }
+
+        .instructions-inner {
+            padding: 1.5rem;
+        }
+
+        .instructions-content h3 {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .instructions-content p {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .instructions-content ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+
+        .instructions-content li {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .instructions-content li:before {
+            content: "•";
+            color: var(--accent-primary);
+            font-weight: bold;
+            position: absolute;
+            left: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -444,6 +532,42 @@
         <!-- Setup Screen -->
         <div id="setup-screen" class="screen active">
             <h1>Undercover / Mr. White</h1>
+
+            <!-- Instructions Section -->
+            <div class="instructions-container">
+                <button class="instructions-toggle" onclick="toggleInstructions()">
+                    <span>How to Play</span>
+                    <span class="instructions-toggle-icon">▼</span>
+                </button>
+                <div class="instructions-content" id="instructions-content">
+                    <div class="instructions-inner">
+                        <p>A social deduction game where players figure out who has a different word.</p>
+
+                        <h3>Roles</h3>
+                        <ul>
+                            <li><strong>Civilians:</strong> Majority of players, all share the same word</li>
+                            <li><strong>Undercover:</strong> Have a similar but different word</li>
+                            <li><strong>Mr. White:</strong> Has no word at all</li>
+                        </ul>
+
+                        <h3>How to Play</h3>
+                        <ul>
+                            <li>Each player secretly views their word (except Mr. White)</li>
+                            <li>Players take turns describing their word without saying it</li>
+                            <li>Discuss who seems suspicious</li>
+                            <li>Vote to eliminate one player</li>
+                            <li>Repeat until a team wins</li>
+                        </ul>
+
+                        <h3>Win Conditions</h3>
+                        <ul>
+                            <li><strong>Civilians win:</strong> Eliminate all Undercover and Mr. White</li>
+                            <li><strong>Undercover wins:</strong> Equal or outnumber Civilians</li>
+                            <li><strong>Mr. White wins:</strong> When eliminated, correctly guess the Civilian word</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
             <div class="card">
                 <div class="input-group">
@@ -752,6 +876,15 @@
             if (toggleBtn) {
                 toggleBtn.textContent = savedTheme === 'light' ? '☀️' : '🌙';
             }
+        }
+
+        // Toggle Instructions
+        function toggleInstructions() {
+            const content = document.getElementById('instructions-content');
+            const toggle = document.querySelector('.instructions-toggle');
+
+            content.classList.toggle('active');
+            toggle.classList.toggle('active');
         }
 
         // Load words from JSON
