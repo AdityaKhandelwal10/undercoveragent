@@ -10,25 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the game repo (undercover-agent)
+      # 1. Checkout the game repo
       - name: Checkout game repo
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js (NO npm cache because no lock file)
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm install
-
-      # 4. Build the game
-      - name: Build game
-        run: npm run build
-
-      # 5. Checkout personal website repo (private repo is OK)
+      # 2. Checkout personal website repo (private repo is OK)
       - name: Checkout personal website repo
         uses: actions/checkout@v4
         with:
@@ -36,14 +22,15 @@ jobs:
           token: ${{ secrets.PERSONAL_WEBSITE_TOKEN }}
           path: website
 
-      # 6. Copy build output into undercover-agent folder
+      # 3. Copy game files directly (no build step needed)
       - name: Copy game files
         run: |
           mkdir -p website/undercover-agent
           rm -rf website/undercover-agent/*
-          cp -r dist/* website/undercover-agent/
+          cp index.html website/undercover-agent/
+          cp words.json website/undercover-agent/
 
-      # 7. Commit and push changes
+      # 4. Commit and push changes
       - name: Commit and push
         run: |
           cd website
@@ -51,7 +38,7 @@ jobs:
           git config user.email "actions@github.com"
           git add undercover-agent/
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Update undercover-agent game build"
+            git commit -m "Update undercover-agent game"
             git push origin HEAD
           else
             echo "No changes to commit"
