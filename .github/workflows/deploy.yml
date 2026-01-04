@@ -14,12 +14,11 @@ jobs:
       - name: Checkout game repo
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
+      # 2. Setup Node.js (NO npm cache because no lock file)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       # 3. Install dependencies
       - name: Install dependencies
