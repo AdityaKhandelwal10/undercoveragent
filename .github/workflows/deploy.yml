@@ -1,0 +1,59 @@
+name: Build and Deploy Game
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the game repo (undercover-agent)
+      - name: Checkout game repo
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build the game
+      - name: Build game
+        run: npm run build
+
+      # 5. Checkout personal website repo (private repo is OK)
+      - name: Checkout personal website repo
+        uses: actions/checkout@v4
+        with:
+          repository: AdityaKhandelwal10/aditya-personal-website
+          token: ${{ secrets.PERSONAL_WEBSITE_TOKEN }}
+          path: website
+
+      # 6. Copy build output into undercover-agent folder
+      - name: Copy game files
+        run: |
+          mkdir -p website/undercover-agent
+          rm -rf website/undercover-agent/*
+          cp -r dist/* website/undercover-agent/
+
+      # 7. Commit and push changes
+      - name: Commit and push
+        run: |
+          cd website
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add undercover-agent/
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Update undercover-agent game build"
+            git push origin HEAD
+          else
+            echo "No changes to commit"
+          fi
