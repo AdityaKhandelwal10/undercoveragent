@@ -1,0 +1,14 @@
+{
+  "name": "undercover-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Workers backend for online Undercover multiplayer",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0",
+    "ws": "^8.20.1"
+  }
+}

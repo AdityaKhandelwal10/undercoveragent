@@ -566,6 +566,17 @@
             <h1>Mr. White</h1>
             <p style="text-align: center; color: var(--text-secondary); margin-bottom: 1.5rem; margin-top: -1rem;">A social deduction game of words and deception</p>
 
+            <!-- Play mode -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <button class="primary" onclick="OnlineUI.open()">🌐 Play Online</button>
+                    <button class="secondary" onclick="document.getElementById('local-setup').scrollIntoView({behavior:'smooth'})">📱 Play on This Device</button>
+                </div>
+                <p style="text-align:center; color: var(--text-secondary); margin: 0.75rem 0 0; font-size: 0.85rem;">
+                    Online: each player joins from their own phone (use a voice/video call to talk). On this device: pass-and-play.
+                </p>
+            </div>
+
             <!-- Instructions Section -->
             <div class="instructions-container">
                 <button class="instructions-toggle" onclick="toggleInstructions()">
@@ -602,7 +613,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" id="local-setup">
                 <div class="input-group">
                     <label for="player-name-input">Add Players</label>
                     <div style="display: flex; gap: 0.5rem;">
@@ -822,8 +833,20 @@
                 <button class="secondary" onclick="resetGame()">New Game (Change Players)</button>
             </div>
         </div>
+
+        <!-- Online Mode Screen (fully rendered by OnlineUI from server state) -->
+        <div id="online-screen" class="screen">
+            <div class="header-bar">
+                <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-online">🌙</button>
+            </div>
+            <h1>Mr. White — Online</h1>
+            <div id="online-root"><!-- rendered by online.js --></div>
+        </div>
     </div>
 
+    <div id="online-toast" style="position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%);z-index:9999;display:none;"></div>
+
+    <script src="gameEngine.js"></script>
     <script>
         // Game State
         const gameState = {
@@ -1018,23 +1041,9 @@
             const mrwhiteCount = parseInt(document.getElementById('mrwhite-count').value);
             const playerCount = gameState.players.length;
 
-            if (playerCount < 3) {
-                error.textContent = 'Please add at least 3 players';
-                error.classList.add('show');
-                return;
-            }
-
-            const totalNonCivilians = undercoverCount + mrwhiteCount;
-            const maxNonCivilians = Math.floor((playerCount - 1) / 2);
-
-            if (totalNonCivilians > maxNonCivilians) {
-                error.textContent = `Civilians must be majority. Max ${maxNonCivilians} Undercover + Mr. White for ${playerCount} players`;
-                error.classList.add('show');
-                return;
-            }
-
-            if (totalNonCivilians === 0) {
-                error.textContent = 'Need at least one infiltrator (Undercover or Mr. White)';
+            const check = GameEngine.validateSetup(playerCount, undercoverCount, mrwhiteCount);
+            if (!check.valid) {
+                error.textContent = check.error;
                 error.classList.add('show');
                 return;
             }
@@ -1048,83 +1057,23 @@
             gameState.votingMode = document.getElementById('voting-mode').value;
 
             // Assign roles
-            assignRoles(undercoverCount, mrwhiteCount);
+            GameEngine.assignRoles(gameState.players, undercoverCount, mrwhiteCount);
 
-            // Select random words from dictionary:
-            // - Pick a random combination (key + values)
-            // - Randomly assign which word goes to civilians vs undercovers
-            const baseWords = Object.keys(wordDictionary);
-            if (baseWords.length === 0) {
-                alert('Word list is empty. Please add entries to words.json');
+            // Select word pair and assign to players by role
+            try {
+                gameState.wordPair = GameEngine.pickWordPair(wordDictionary);
+            } catch (e) {
+                alert('Word list problem: ' + e.message + '. Please check words.json');
                 return;
             }
-            const randomBase = baseWords[Math.floor(Math.random() * baseWords.length)];
-            const relatedWords = wordDictionary[randomBase];
-            if (!Array.isArray(relatedWords) || relatedWords.length === 0) {
-                alert('Invalid word configuration in words.json');
-                return;
-            }
-
-            // Combine key word with all related words and shuffle
-            const allWords = [randomBase, ...relatedWords];
-            shuffleArray(allWords);
-            
-            // Randomly assign: first word to civilians, second to undercovers
-            const civilianWord = allWords[0];
-            const undercoverWord = allWords[1];
-            gameState.wordPair = { civilian: civilianWord, undercover: undercoverWord };
-
-            // Assign words based on roles
-            gameState.players.forEach(player => {
-                if (player.role === 'civilian') {
-                    player.word = civilianWord;
-                } else if (player.role === 'undercover') {
-                    player.word = undercoverWord;
-                } else {
-                    player.word = null; // Mr. White has no word
-                }
-            });
+            GameEngine.assignWords(gameState.players, gameState.wordPair);
 
             // Shuffle players for word reveal
-            shuffleArray(gameState.players);
+            GameEngine.shuffleArray(gameState.players);
             gameState.currentPlayerIndex = 0;
 
             showScreen('reveal-screen');
             prepareWordReveal();
-        }
-
-        function assignRoles(undercoverCount, mrwhiteCount) {
-            const roles = [];
-
-            // Add undercovers
-            for (let i = 0; i < undercoverCount; i++) {
-                roles.push('undercover');
-            }
-
-            // Add Mr. Whites
-            for (let i = 0; i < mrwhiteCount; i++) {
-                roles.push('mrwhite');
-            }
-
-            // Fill rest with civilians
-            while (roles.length < gameState.players.length) {
-                roles.push('civilian');
-            }
-
-            // Shuffle roles
-            shuffleArray(roles);
-
-            // Assign to players
-            gameState.players.forEach((player, index) => {
-                player.role = roles[index];
-            });
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
         }
 
         // Word Reveal Functions
@@ -1289,27 +1238,7 @@
 
         // Elimination Functions
         function processElimination() {
-            // Count votes
-            const voteCounts = {};
-            gameState.votes.forEach(vote => {
-                voteCounts[vote] = (voteCounts[vote] || 0) + 1;
-            });
-
-            // Find player(s) with most votes
-            let maxVotes = 0;
-            let eliminatedCandidates = [];
-
-            for (const [name, count] of Object.entries(voteCounts)) {
-                if (count > maxVotes) {
-                    maxVotes = count;
-                    eliminatedCandidates = [name];
-                } else if (count === maxVotes) {
-                    eliminatedCandidates.push(name);
-                }
-            }
-
-            // Handle tie randomly
-            const eliminatedName = eliminatedCandidates[Math.floor(Math.random() * eliminatedCandidates.length)];
+            const eliminatedName = GameEngine.resolveEliminationName(gameState.votes);
             const eliminatedPlayer = gameState.players.find(p => p.name === eliminatedName);
             eliminatedPlayer.isEliminated = true;
 
@@ -1341,10 +1270,9 @@
         }
 
         function submitMrWhiteGuess() {
-            const guess = document.getElementById('mrwhite-guess-input').value.trim().toLowerCase();
-            const correctWord = gameState.wordPair.civilian.toLowerCase();
+            const guess = document.getElementById('mrwhite-guess-input').value;
 
-            if (guess === correctWord) {
+            if (GameEngine.isMrWhiteGuessCorrect(guess, gameState.wordPair)) {
                 endGame('mrwhite');
             } else {
                 const message = document.getElementById('eliminated-message');
@@ -1356,22 +1284,9 @@
         }
 
         function continueGame() {
-            // Check win conditions
-            const activePlayers = gameState.players.filter(p => !p.isEliminated);
-            const civilians = activePlayers.filter(p => p.role === 'civilian');
-            const undercovers = activePlayers.filter(p => p.role === 'undercover');
-            const mrwhites = activePlayers.filter(p => p.role === 'mrwhite');
-            const infiltrators = undercovers.length + mrwhites.length;
-
-            // Civilians win if all infiltrators eliminated
-            if (infiltrators === 0) {
-                endGame('civilians');
-                return;
-            }
-
-            // Infiltrators win if they equal or outnumber civilians
-            if (infiltrators >= civilians.length) {
-                endGame('infiltrators');
+            const winner = GameEngine.checkWinCondition(gameState.players);
+            if (winner) {
+                endGame(winner);
                 return;
             }
 
@@ -1547,45 +1462,19 @@
             gameState.votingMode = document.getElementById('voting-mode').value;
 
             // Assign roles for new round
-            assignRoles(undercoverCount, mrwhiteCount);
+            GameEngine.assignRoles(gameState.players, undercoverCount, mrwhiteCount);
 
-            // Select random words from dictionary:
-            // - Pick a random combination (key + values)
-            // - Randomly assign which word goes to civilians vs undercovers
-            const baseWords = Object.keys(wordDictionary);
-            if (baseWords.length === 0) {
-                alert('Word list is empty. Please add entries to words.json');
+            // Select word pair and assign to players by role
+            try {
+                gameState.wordPair = GameEngine.pickWordPair(wordDictionary);
+            } catch (e) {
+                alert('Word list problem: ' + e.message + '. Please check words.json');
                 return;
             }
-            const randomBase = baseWords[Math.floor(Math.random() * baseWords.length)];
-            const relatedWords = wordDictionary[randomBase];
-            if (!Array.isArray(relatedWords) || relatedWords.length === 0) {
-                alert('Invalid word configuration in words.json');
-                return;
-            }
-
-            // Combine key word with all related words and shuffle
-            const allWords = [randomBase, ...relatedWords];
-            shuffleArray(allWords);
-            
-            // Randomly assign: first word to civilians, second to undercovers
-            const civilianWord = allWords[0];
-            const undercoverWord = allWords[1];
-            gameState.wordPair = { civilian: civilianWord, undercover: undercoverWord };
-
-            // Assign words based on roles
-            gameState.players.forEach(player => {
-                if (player.role === 'civilian') {
-                    player.word = civilianWord;
-                } else if (player.role === 'undercover') {
-                    player.word = undercoverWord;
-                } else {
-                    player.word = null;
-                }
-            });
+            GameEngine.assignWords(gameState.players, gameState.wordPair);
 
             // Shuffle players for word reveal
-            shuffleArray(gameState.players);
+            GameEngine.shuffleArray(gameState.players);
             gameState.currentPlayerIndex = 0;
 
             showScreen('reveal-screen');
@@ -1643,6 +1532,16 @@
             }
         });
     </script>
+    <script>
+        // Online backend config. Override window.UNDERCOVER_SERVER for prod.
+        // Local dev points at `wrangler dev` (default port 8787).
+        window.UNDERCOVER_CONFIG = {
+            serverBase: (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+                ? 'http://localhost:8787'
+                : 'https://undercover-server.akaditya05-cloudflare.workers.dev'
+        };
+    </script>
+    <script src="online.js"></script>
     <!-- Cloudflare Web Analytics -->
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ef0347ff22ff43f886ebeed8fd267c04"}'></script>
     <!-- End Cloudflare Web Analytics -->    
