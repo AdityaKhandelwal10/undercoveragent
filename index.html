@@ -635,6 +635,14 @@
                     </select>
                 </div>
 
+                <div class="input-group">
+                    <label for="word-pack">Word Pack</label>
+                    <select id="word-pack" onchange="onWordPackChange()">
+                        <option value="classic">Classic Words</option>
+                        <option value="soccer">Soccer Players</option>
+                    </select>
+                </div>
+
                 <div id="setup-error" class="error">Please add at least 3 players</div>
 
                 <button class="primary" onclick="startGame()">Start Game</button>
@@ -868,7 +876,8 @@
             const settings = {
                 undercoverCount: document.getElementById('undercover-count').value,
                 mrwhiteCount: document.getElementById('mrwhite-count').value,
-                votingMode: document.getElementById('voting-mode').value
+                votingMode: document.getElementById('voting-mode').value,
+                wordPack: document.getElementById('word-pack').value
             };
             localStorage.setItem('undercoverSettings', JSON.stringify(settings));
         }
@@ -881,10 +890,16 @@
                     document.getElementById('undercover-count').value = settings.undercoverCount || 1;
                     document.getElementById('mrwhite-count').value = settings.mrwhiteCount || 1;
                     document.getElementById('voting-mode').value = settings.votingMode || 'open';
+                    document.getElementById('word-pack').value = settings.wordPack || 'classic';
                 } catch (error) {
                     console.error('Error loading saved settings:', error);
                 }
             }
+        }
+
+        function onWordPackChange() {
+            saveGameSettings();
+            loadWords();
         }
 
         // Theme Management
@@ -923,7 +938,9 @@
         // Load words from JSON
         async function loadWords() {
             try {
-                const response = await fetch('words.json');
+                const pack = document.getElementById('word-pack').value;
+                const file = pack === 'soccer' ? 'words-football.json' : 'words.json';
+                const response = await fetch(file);
                 const data = await response.json();
                 // Expect structure: { "data": { "word1": [ "word2", "word3" ], ... } }
                 wordDictionary = data.data || {};
@@ -940,9 +957,9 @@
 
         // Initialize
         loadTheme();
-        loadWords();
         loadPlayersFromStorage();
         loadGameSettings();
+        loadWords();
 
         // Setup Screen Functions
         function updateRoleInputLimits() {
