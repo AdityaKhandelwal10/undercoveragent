@@ -7,25 +7,56 @@ import words from './words.json';
 
 const WORD_DICTIONARY = words.data || {};
 
-const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-};
+// Parse the comma-separated allowlist from wrangler.toml's ALLOWED_ORIGINS var.
+// Empty/unset = allow any origin (useful for quick local testing).
+function allowedOrigins(env) {
+    return (env.ALLOWED_ORIGINS || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+}
 
-function json(body, status = 200) {
+function isOriginAllowed(origin, env) {
+    const list = allowedOrigins(env);
+    if (list.length === 0) return true; // no allowlist configured -> open
+    return origin && list.includes(origin);
+}
+
+// CORS headers that reflect the caller's origin only when it's allowed.
+function corsHeaders(request, env) {
+    const origin = request.headers.get('Origin');
+    const headers = {
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Vary': 'Origin'
+    };
+    if (isOriginAllowed(origin, env) && origin) {
+        headers['Access-Control-Allow-Origin'] = origin;
+    } else if (allowedOrigins(env).length === 0) {
+        headers['Access-Control-Allow-Origin'] = '*';
+    }
+    return headers;
+}
+
+function json(body, status, request, env) {
     return new Response(JSON.stringify(body), {
         status,
-        headers: { 'Content-Type': 'application/json', ...CORS }
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(request, env) }
     });
 }
 
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
+        const origin = request.headers.get('Origin');
 
         if (request.method === 'OPTIONS') {
-            return new Response(null, { headers: CORS });
+            return new Response(null, { headers: corsHeaders(request, env) });
+        }
+
+        // Reject anything not coming from an allowed origin.
+        if (!isOriginAllowed(origin, env)) {
+            return json({ error: 'forbidden', message: 'Origin not allowed.' }, 403, request, env);
         }
 
         // Create a room: reserve a global slot + unique code.
@@ -33,10 +64,10 @@ export default {
             const registry = env.REGISTRY.get(env.REGISTRY.idFromName('global'));
             const res = await registry.fetch('https://do/reserve', { method: 'POST' });
             if (res.status === 409) {
-                return json({ error: 'serverFull', message: 'Too many active games right now. Try again shortly.' }, 409);
+                return json({ error: 'serverFull', message: 'Too many active games right now. Try again shortly.' }, 409, request, env);
             }
             const { code } = await res.json();
-            return json({ code });
+            return json({ code }, 200, request, env);
         }
 
         // WebSocket upgrade into a room: /api/room/:code/ws
@@ -53,7 +84,7 @@ export default {
             return room.fetch(new Request(fwd.toString(), request));
         }
 
-        return json({ error: 'notFound' }, 404);
+        return json({ error: 'notFound' }, 404, request, env);
     }
 };
 
