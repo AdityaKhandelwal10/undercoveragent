@@ -29,6 +29,8 @@ jobs:
           rm -rf website/undercover-agent/*
           cp index.html website/undercover-agent/
           cp words.json website/undercover-agent/
+          cp gameEngine.js website/undercover-agent/
+          cp online.js website/undercover-agent/
 
       # 4. Commit and push changes
       - name: Commit and push

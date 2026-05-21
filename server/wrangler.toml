@@ -1,0 +1,29 @@
+name = "undercover-server"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Tunable caps — keep cost/room count under control.
+[vars]
+MAX_ROOMS = "20"
+MAX_PLAYERS_PER_ROOM = "12"
+ROOM_IDLE_TIMEOUT_MS = "1800000"  # 30 minutes
+
+# >>> ADD YOUR DOMAINS HERE <<<
+# Comma-separated list of origins allowed to use this backend. Requests from
+# any other origin get a 403. Include your production site + local dev origins.
+# Leave empty ("") to allow all origins (only for quick local testing).
+# Example: "https://yoursite.netlify.app,https://undercover.yourdomain.com,http://localhost:8080,http://127.0.0.1:8080"
+ALLOWED_ORIGINS = "https://adikhandelwal.dev,https://creative-praline-b29597.netlify.app/,http://localhost:8080,http://127.0.0.1:8080"
+
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
+[[durable_objects.bindings]]
+name = "REGISTRY"
+class_name = "Registry"
+
+# SQLite-backed classes are required for Durable Objects on the free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Registry"]
